@@ -16,7 +16,6 @@
 #define CHILD_SEM 0
 #define PARENT_SEM 1
 
-/* Problem 4 -- declare the shared memory structure */
 typedef struct {
     int num_blocks;
     struct {
@@ -25,17 +24,16 @@ typedef struct {
     } blocks[20];
 } shared_data_t;
 
-/* Problem 5 -- Child function */
 void child_process(int semid, int shmid) {
     shared_data_t *data = (shared_data_t *)shmat(shmid, NULL, 0);
     srand(time(NULL) ^ getpid());
 
     releaseSem(semid, CHILD_SEM);
 
-    data->num_blocks = (rand() % 11) + 10;  // 10-20 blocks
+    data->num_blocks = (rand() % 11) + 10;
     for (int i = 0; i < data->num_blocks; ++i) {
-        data->blocks[i].length = (rand() % 9) + 2;  // 2-10 characters
-        data->blocks[i].ch = 'a' + (rand() % 26);   // 'a' to 'z'
+        data->blocks[i].length = (rand() % 9) + 2;
+        data->blocks[i].ch = 'a' + (rand() % 26);
     }
 
     releaseSem(semid, PARENT_SEM);
@@ -45,14 +43,13 @@ void child_process(int semid, int shmid) {
     releaseSem(semid, PARENT_SEM);
 }
 
-/* Problem 6 -- Parent function */
 void parent_process(int semid, int shmid) {
     shared_data_t *data = (shared_data_t *)shmat(shmid, NULL, 0);
     srand(time(NULL) ^ getpid());
 
     reserveSem(semid, PARENT_SEM);
 
-    int width = (rand() % 6) + 10;  // width 10-15
+    int width = (rand() % 6) + 10; 
     int count = 0;
 
     for (int i = 0; i < data->num_blocks; ++i) {
@@ -69,7 +66,6 @@ void parent_process(int semid, int shmid) {
     shmdt(data);
 }
 
-/* Problem 7 -- main */
 int main(int argc, char *argv[]) {
     int semid = semget(IPC_PRIVATE, 2, IPC_CREAT | 0666);
     int shmid = shmget(IPC_PRIVATE, sizeof(shared_data_t), IPC_CREAT | 0666);
@@ -79,9 +75,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    // Initialize semaphores
-    init_sem(semid, CHILD_SEM, 1);  // child available
-    init_sem(semid, PARENT_SEM, 0); // parent blocked
+    init_sem(semid, CHILD_SEM, 1);  
+    init_sem(semid, PARENT_SEM, 0); 
 
     pid_t pid = fork();
     if (pid < 0) {
